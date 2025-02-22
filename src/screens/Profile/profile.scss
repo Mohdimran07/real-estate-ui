@@ -1,0 +1,97 @@
+@import '../../responsive.scss';
+
+
+.profile{
+    display: flex;
+    height: 100%;
+    padding: 0px 10px;
+
+    @include md{
+        flex-direction: column;
+        // overflow: scroll;
+    }
+   
+    .info{
+        flex: 3;
+        height: 100%;
+        // border: 1px solid yellowgreen;
+
+        @include md{
+            flex: none;
+            height: max-content;
+        }
+        
+        .wrapper{
+            padding-right: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+            height: 100%;
+            overflow-y: scroll;
+
+            .title{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
+                h1{
+                    font-weight: 300;
+                }
+
+                button{
+                    padding: 12px 24px;
+                    background-color: #fece51;
+                    cursor: pointer;
+                    border: none;
+                }
+            }
+
+            .userInfo{
+                display: flex;
+                gap: 20px;
+                flex-direction: column;
+
+                span{
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                }
+
+                button{
+                    width: 100px;
+                    background-color: teal;
+                    border: none;
+                    color: white;
+                    padding: 10px 20px;
+                    cursor: pointer;
+                    border-radius: 5px;
+                }
+
+                img{
+                    height: 40px;
+                    width: 40px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+            }
+        }
+    }
+    
+    .messageContainer{
+        // background-color: greenyellow;
+        flex: 2;
+        height: 100%;
+
+        @include md{
+            flex: none;
+            height: max-content;
+        }
+
+        .wrapper{
+          padding: 0px 14px;
+        //   border: 2px solid red;
+          height: 100%;
+        //   overflow-y: scroll;
+        }
+    }
+}

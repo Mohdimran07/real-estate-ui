@@ -1,0 +1,23 @@
+.map{
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+
+    .popContainer{
+        display: flex;
+        gap: 20px;
+
+        img{
+            width: 64px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .textContainer{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    }
+}
