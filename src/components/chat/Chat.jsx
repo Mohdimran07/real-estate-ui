@@ -72,7 +72,7 @@ const Chat = ({ chats }) => {
     if (socket && chat) {
       console.log("chat", chat);
       socket.on("getMessage", (data) => {
-        debugger;
+       
         console.log("getMessage:", data);
         if (chat.id === data.chatId) {
           setChat((prev) => ({ ...prev, messages: [...prev.messages, data] }));

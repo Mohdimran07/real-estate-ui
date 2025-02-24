@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    setSocket(io("http://localhost:4000"));
+    setSocket(io("https://real-estate-app-socket-n3dn.onrender.com"));
   }, []);
 
   useEffect(() => {
