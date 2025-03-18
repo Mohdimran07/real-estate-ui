@@ -8,8 +8,11 @@ export const SocketProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
   const [socket, setSocket] = useState(null);
 
+  // useEffect(() => {
+  //   setSocket(io("https://real-estate-app-socket-n3dn.onrender.com"));
+  // }, []);
   useEffect(() => {
-    setSocket(io("https://real-estate-app-socket-n3dn.onrender.com"));
+    setSocket(io("http://localhost:4000"));
   }, []);
 
   useEffect(() => {
