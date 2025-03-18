@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://real-estate-app-el42.onrender.com';
+export const BASE_URL = 'https://real-estate-app-el42.onrender.com/api';
