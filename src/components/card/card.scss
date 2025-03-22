@@ -197,10 +197,20 @@
   .property-details {
     padding: 15px;
 
+    .title{
+      font-size: 20px;
+      font-weight: 600;
+      color: #000;
+    }
+
     .price {
-      margin: 0;
-      font-size: 18px;
-      color: #333;
+      padding: 5px;
+      background-color: rgba(254, 205, 81, 0.438);
+      border-radius: 5px;
+      width: max-content;
+      font-size: 20px;
+      font-weight: 300;
+      margin-bottom: 10px;
     }
 
     p {

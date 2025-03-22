@@ -1,12 +1,21 @@
 import React, { useContext, useEffect, useState } from "react";
-import DOMPurify from "dompurify";
+import Modal from "react-modal";
 import "./singlepage.scss";
 import Slider from "../../components/slider/Slider";
-import { singlePostData, userData } from "../../lib/dummydata";
-import Map from "../../components/map/Map";
 import { useNavigate, useParams } from "react-router";
 import { BASE_URL } from "../../constants";
 import { AuthContext } from "../../context/AuthContext";
+import PostDetails from "../../components/PostDetails/PostDetails";
+import FeatureList from "../../components/FeatureList/FeatureList";
+import {
+  createChat,
+  fetchAllChats,
+  fetchSinglePost,
+  savePostById,
+  sendMessage,
+} from "../../services/apiService";
+
+Modal.setAppElement("#root");
 
 const SinglePage = () => {
   const { id } = useParams();
@@ -16,22 +25,32 @@ const SinglePage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const openModal = () => {
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
 
   useEffect(() => {
+    if (!currentUser) {
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
     // Fetch data using the ID
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/posts/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
+        const result = await fetchSinglePost(id, {
+          signal: abortController.signal,
         });
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const result = await response.json();
         console.log(result.data);
         setData(result.data);
         setSaved(result.isSaved);
@@ -39,160 +58,143 @@ const SinglePage = () => {
       } catch (err) {
         setError(err.message);
         setLoading(false);
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => abortController.abort(); // Cleanup function
   }, [id]); // Dependency on `id` ensures the effect runs when ID changes
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
   const savePostHandler = async () => {
-    setSaved((prev) => !prev);
+    const currentSavedState = saved;
+    setSaved(!currentSavedState);
     if (!currentUser) {
       navigate("/login");
     }
 
     try {
-      await fetch(`${BASE_URL}/user/save`, {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ postId: id }),
-      });
+      await savePostById(id);
     } catch (error) {
-      setSaved((prev) => !prev);
+      setSaved(currentSavedState);
       console.log(error);
     }
   };
 
-  // const data = singlePostData;
+  // Helper function to find an object ID based on user IDs
+  function findObjectIdWithUserIds(data, id1, id2) {
+    if (!Array.isArray(data)) return null; // Return null if data is invalid
+
+    return (
+      data.find(
+        (item) => item?.userIDs?.includes(id1) && item?.userIDs?.includes(id2)
+      )?.id || null
+    ); // Return the object's ID or null if not found
+  }
+
+  // Main function to handle sending a message
+  const handleSendMessage = async () => {
+    try {
+      const chatsData = await fetchAllChats();
+      console.log("chatsData", chatsData);
+
+      // Find matching chat ID
+      const matchingId = findObjectIdWithUserIds(
+        chatsData.data,
+        currentUser.id,
+        data.userId
+      );
+
+      if (matchingId) {
+        // Send the message to the existing chat
+        const messageData = await sendMessage(matchingId, message);
+        console.log("Message sent to existing chat:", messageData);
+      } else {
+        // Create a new chat and send the message
+        const createChatData = await createChat(data?.userId);
+        console.log("data:", createChatData, currentUser.id, data.userId);
+        const newMatchingId = findObjectIdWithUserIds(
+          createChatData.data,
+          currentUser.id,
+          data.userId
+        );
+        console.log("newMatchingId", newMatchingId);
+        if (newMatchingId) {
+          const messageData = await sendMessage(newMatchingId, message);
+          console.log("Message sent to new chat:", messageData);
+        }
+      }
+    } catch (error) {
+      console.error("Error sending message:", error); // Handle error properly
+    } finally {
+      closeModal(); // Close modal after sending
+    }
+  };
+
   return (
-    <div className="singleContainer">
-      <div className="details">
-        <div className="wrapper">
-          <Slider images={data.images} />
-          <div className="info-section">
-            <div className="top-section">
-              <div className="post">
-                <h1>{data.title}</h1>
-                <div className="address">
-                  <img src="/pin.png" alt="location" />
-                  <span>{data.address}</span>
-                </div>
-                <div className="price">₹ {data.price}</div>
-              </div>
-              <div className="user">
-                <img src={data.user.avatar || "/noavatar.jpg"} alt="" />
-                <span>{data.user.name}</span>
-              </div>
-            </div>
-            <div
-              className="bottom-section"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(data.PostDetail?.desc),
-              }}
-            ></div>
+    <>
+      <div className="singleContainer">
+        <div className="details">
+          <div className="wrapper">
+            <Slider images={data.images} />
+            <PostDetails data={data} />
           </div>
         </div>
-      </div>
-      <div className="features">
-        <div className="wrapper">
-          <p className="title">General</p>
-          <div className="listVertical">
-            <div className="feature">
-              <img src="/utility.png" alt="" />
-              <div className="featureText">
-                <span>Utilities</span>
-                {data.PostDetail?.utilies === "owner" ? (
-                  <p>Owner is responsible</p>
-                ) : (
-                  <p>Tenant is responsible</p>
-                )}
-              </div>
+        <div className="features">
+          <FeatureList data={data} />
+          {currentUser.id !== data.userId && (
+            <div className="buttons">
+              <button onClick={openModal}>
+                <img src="/chat.png" alt="" />
+                Send a Message
+              </button>
+              <button
+                onClick={savePostHandler}
+                style={{ backgroundColor: saved ? "#fece51" : "white" }}
+              >
+                <img src="/save.png" alt="" />
+                {saved ? "Place Saved" : "Save the Place"}
+              </button>
             </div>
-            <div className="feature">
-              <img src="/pet.png" alt="" />
-              <div className="featureText">
-                <span>Pet Policy</span>
-                {data.PostDetail?.pet === "allowed" ? (
-                  <p>Pets allowed</p>
-                ) : (
-                  <p>Pets not allowed</p>
-                )}
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/fee.png" alt="" />
-              <div className="featureText">
-                <span>Income Policy</span>
-                <p>{data.PostDetail?.income}</p>
-              </div>
-            </div>
-          </div>
-          <p className="title">Room Sizes</p>
-          <div className="sizes">
-            <div className="size">
-              <img src="/size.png" alt="" />
-              <span>{data.PostDetail?.size} sqft</span>
-            </div>
-            <div className="size">
-              <img src="/bed.png" alt="" />
-              <span>{data.bedroom} beds</span>
-            </div>
-            <div className="size">
-              <img src="/bath.png" alt="" />
-              <span>{data.bathroom} bathroom</span>
-            </div>
-          </div>
-          <p className="title">Near by places</p>
-          <div className="listHorizontal">
-            <div className="feature">
-              <img src="/school.png" alt="" />
-              <div className="featureText">
-                <span>School</span>
-                <p>{data.PostDetail?.school} m away</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/pet.png" alt="" />
-              <div className="featureText">
-                <span>Bus Stop</span>
-                <p>{data.PostDetail?.bus}m away</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/fee.png" alt="" />
-              <div className="featureText">
-                <span>Restaurant</span>
-                <p>{data.PostDetail?.restaurant}m away</p>
-              </div>
-            </div>
-          </div>
-          <p className="title"></p>
-          {/* <div className="mapContainer">
-            <Map items={[data]} />
-          </div> */}
-          <div className="buttons">
-            <button>
-              <img src="/chat.png" alt="" />
-              Send a Message
-            </button>
-            <button
-              onClick={savePostHandler}
-              style={{ backgroundColor: saved ? "#fece51" : "white" }}
-            >
-              {/* {saved ? <img src="/saved.png" alt="" /> : <img src="/save.png" alt="" />} */}
-              <img src="/save.png" alt="" />
-              {saved ? "Place Saved" : "Save the Place"}
-            </button>
-          </div>
+          )}
         </div>
+
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          className="modal" // Apply SCSS class
+          overlayClassName="modal-overlay" // Apply SCSS class
+          contentLabel="Example Modal" //Accessibility label
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+          >
+            <label htmlFor="message">Message:</label>
+            <textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Enter your message"
+              className="modal-textarea" // Add class for styling
+            />
+            <button type="submit">Send Message</button>
+            <button type="button" onClick={closeModal}>
+              Cancel
+            </button>
+          </form>
+        </Modal>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -1,12 +1,13 @@
 import React, { useContext, useState } from "react";
 import "./navbar.scss";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { AuthContext } from "../../context/AuthContext";
 import { useNotificationStore } from "../../lib/notificationStore";
 
 const Navbar = () => {
   const { currentUser } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
+  const location = useLocation();
 
   const notifications = useNotificationStore(
     (state) => state.fetchNotifications
@@ -18,6 +19,14 @@ const Navbar = () => {
   if (currentUser) {
     notifications();
   }
+
+  const isActive = (pathname) => {
+    return location.pathname === pathname;
+  };
+
+  const activeStyle = {
+    color: '#fece51', // Apply the highlight color
+  };
   
   return (
     <nav>
@@ -26,10 +35,11 @@ const Navbar = () => {
           <img src="/logo1.png" alt="logo in PNG" />
           <span>Real-Estate</span>
         </a>
-        <a href="/">Home</a>
-        <a href="/list">About</a>
-        <a href="/">Contact</a>
-        <a href="/">Agents</a>
+        {/* <a href="/">Home</a> */}
+        <a href="/list" style={isActive('/list') ? activeStyle : null}>Properties</a>
+        <a href="/contact" style={isActive('/contact') && location.search === '' ? activeStyle : null}>Contact</a>
+        <a href="/agents" style={isActive('/agents') && location.search !== '' ? activeStyle : null}>Agents</a>
+      
       </div>
       <div className="right">
         {currentUser ? (

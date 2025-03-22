@@ -13,11 +13,11 @@
       flex-direction: column;
       gap: 8px;
 
-      label{
+      label {
         font-size: 20px;
       }
 
-      input{
+      input {
         padding: 10px;
         border: 1px solid #e0e0e0;
         border-radius: 5px;
@@ -26,7 +26,7 @@
     }
   }
 
-  .bottom{
+  .bottom {
     padding: 0px 10px;
     width: 100%;
     display: flex;
@@ -34,39 +34,112 @@
     justify-content: space-between;
     align-items: center;
 
-    .item{
+    .item {
+      display: flex;
+      flex-direction: column;
+
+      label {
+        margin: 2px;
+      }
+
+      input,
+      select {
+        padding: 10px;
+        width: 100px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        font-size: 15px;
+      }
+    }
+
+    button {
+      width: 100px;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      background-color: #fece51;
+      border-radius: 5px;
+
+      img {
+        width: 24px;
+        height: 24px;
+      }
+
+      &:hover {
+        background-color: #fac747;
+      }
+    }
+  }
+
+  .filter-content {
+    // border: 1px solid red;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+
+    .search-input {
+      // border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 15px;
+      flex: 1;
+
+      input {
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        font-size: 15px;
+        width: 100%;
+      }
+    }
+
+    .filter-sec {
+      // padding: 10px;
+      // border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 15px;
+      flex: 1;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      justify-content: space-evenly;
+
+      .item {
         display: flex;
         flex-direction: column;
 
-        label{
-            margin: 2px;
+        label {
+          margin: 2px;
         }
 
-        input, select{
-            padding: 10px;
-            width: 100px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 15px;
+        input,
+        select {
+          padding: 10px;
+          width: 100px;
+          border: 1px solid #e0e0e0;
+          border-radius: 5px;
+          font-size: 15px;
         }
-    }
+      }
 
-    button{
+      button {
         width: 100px;
-        padding: 10px;
+        padding: 5px;
         border: none;
         cursor: pointer;
         background-color: #fece51;
         border-radius: 5px;
 
-        img{
-            width: 24px;
-            height: 24px;
+        img {
+          width: 20px;
+          height: 20px;
         }
 
-        &:hover{
-            background-color: #fac747;
+        &:hover {
+          background-color: #fac747;
         }
+      }
     }
   }
 }

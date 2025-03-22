@@ -10,6 +10,7 @@ const CreatePost = () => {
   const [value, setValue] = useState("");
   const [images, setImages] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -18,32 +19,8 @@ const CreatePost = () => {
     const formData = new FormData(e.target);
     const inputs = Object.fromEntries(formData);
 
-    console.log({
-      postData: {
-        title: inputs.title,
-        price: parseInt(inputs.price),
-        address: inputs.address,
-        city: inputs.city,
-        bedroom: parseInt(inputs.bedroom),
-        bathroom: parseInt(inputs.bathroom),
-        type: inputs.type,
-        property: inputs.property,
-        latitude: inputs.latitude,
-        longitude: inputs.longitude,
-        images: images,
-      },
-      postDetail: {
-        desc: value,
-        utilities: inputs.utilities,
-        pet: inputs.pet,
-        income: inputs.income,
-        size: parseInt(inputs.size),
-        school: parseInt(inputs.school),
-        bus: parseInt(inputs.bus),
-        restaurant: parseInt(inputs.restaurant),
-      },
-    });
     try {
+      setLoading(true);
       const res = await fetch(`${BASE_URL}/posts/`, {
         method: "POST",
         headers: {
@@ -76,12 +53,14 @@ const CreatePost = () => {
           },
         }),
       });
-      console.log(res)
+      console.log(res);
       const respData = await res.json();
       console.log(respData);
-      navigate("/list")
+      navigate("/list");
     } catch (error) {
       setError(error);
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -185,7 +164,9 @@ const CreatePost = () => {
               <label htmlFor="restaurant">Restaurant</label>
               <input min={0} id="restaurant" name="restaurant" type="number" />
             </div>
-            <button className="sendButton">Add</button>
+            <button className="sendButton" disabled={loading}>
+              {loading ? "Uploading..." : "Add"}
+            </button>
             {error && <span>{error}</span>}
           </form>
         </div>

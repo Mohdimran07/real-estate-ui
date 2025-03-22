@@ -63,8 +63,8 @@ const Card = ({ item }) => {
       </Link>
 
       <div className="property-details">
+        <p className="title">{item.title}</p>
         <h3 className="price">₹ {item.price}</h3>
-        <p>{item.title}</p>
         <p>{item.address}</p>
         {/* <p>213 King Edward Ave, London, ON N5Z 3T9</p> */}
         <div className="property-meta">
