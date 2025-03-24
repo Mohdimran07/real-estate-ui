@@ -4,7 +4,8 @@ import "./createPost.scss";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import UploadWidget from "../../components/uploadWiget/UploadWidget";
-import { BASE_URL } from "../../constants";
+import { createPostProperty } from "../../services/postServices";
+import { showToast } from "../../components/toast/Toast";
 
 const CreatePost = () => {
   const [value, setValue] = useState("");
@@ -21,42 +22,38 @@ const CreatePost = () => {
 
     try {
       setLoading(true);
-      const res = await fetch(`${BASE_URL}/posts/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const respData = await createPostProperty(
+        {
+          title: inputs.title,
+          price: parseInt(inputs.price),
+          address: inputs.address,
+          city: inputs.city,
+          bedroom: parseInt(inputs.bedroom),
+          bathroom: parseInt(inputs.bathroom),
+          type: inputs.type,
+          property: inputs.property,
+          latitude: parseInt(inputs.latitude),
+          longitude: parseInt(inputs.longitude),
+          images: images,
         },
-        credentials: "include",
-        body: JSON.stringify({
-          postData: {
-            title: inputs.title,
-            price: parseInt(inputs.price),
-            address: inputs.address,
-            city: inputs.city,
-            bedroom: parseInt(inputs.bedroom),
-            bathroom: parseInt(inputs.bathroom),
-            type: inputs.type,
-            property: inputs.property,
-            latitude: parseInt(inputs.latitude),
-            longitude: parseInt(inputs.longitude),
-            images: images,
-          },
-          postDetail: {
-            desc: value,
-            utilies: inputs.utilies,
-            pet: inputs.pet,
-            income: inputs.income,
-            size: parseInt(inputs.size),
-            school: parseInt(inputs.school),
-            bus: parseInt(inputs.bus),
-            restaurant: parseInt(inputs.restaurant),
-          },
-        }),
-      });
-      console.log(res);
-      const respData = await res.json();
+        {
+          desc: value,
+          utilies: inputs.utilies,
+          pet: inputs.pet,
+          income: inputs.income,
+          size: parseInt(inputs.size),
+          school: parseInt(inputs.school),
+          bus: parseInt(inputs.bus),
+          restaurant: parseInt(inputs.restaurant),
+        }
+      );
       console.log(respData);
-      navigate("/list");
+      if (!respData.error) {
+        showToast(respData.message, "success");
+        navigate("/list");
+      } else {
+        showToast(respData.message, "error");
+      }
     } catch (error) {
       setError(error);
     } finally {

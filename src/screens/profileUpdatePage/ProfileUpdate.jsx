@@ -1,19 +1,16 @@
 import React, { useContext, useState } from "react";
-import { Cloudinary } from '@cloudinary/url-gen';
-import { AdvancedImage, responsive, placeholder } from '@cloudinary/react';
 import "./profileUpdate.scss";
 import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router";
 import UploadWidget from "../../components/uploadWiget/UploadWidget";
-import { BASE_URL } from "./../../constants";
+import { showToast } from "../../components/toast/Toast";
+import { updateUserProfile } from "../../services/postServices";
 
 const ProfileUpdate = () => {
   const { currentUser, updateUser } = useContext(AuthContext);
-  console.log(currentUser)
-  const [error, setError] = useState("");
   const [avatar, setAvatar] = useState([]);
- 
-  const [publicId, setPublicId] = useState('');
+
+  const [publicId, setPublicId] = useState("");
 
   const navigate = useNavigate();
 
@@ -29,27 +26,23 @@ const ProfileUpdate = () => {
       name,
       email,
       password,
-      avatar:
-        avatar[0] ||
-        currentUser.avatar ||
-        "/noavatar.jpg",
+      avatar: avatar[0] || currentUser.avatar || "/noavatar.jpg",
     };
-    console.log(userInfo);
+
+    if (!name || !email || !password) {
+      showToast("Please fill all the fields", "warn");
+      return;
+    }
 
     try {
-      const resp = await fetch(`${BASE_URL}/user/${currentUser.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(userInfo),
-      });
-      const responsedata = await resp.json();
-      const { updatedUser } = responsedata;
-      console.log(updatedUser);
-      updateUser(updatedUser);
-      navigate("/profile");
+      const responsedata = await updateUserProfile(currentUser.id, userInfo);
+      if (!responsedata.error) {
+        showToast(responsedata.message, "success");
+        const { updatedUser } = responsedata;
+        console.log(updatedUser);
+        updateUser(updatedUser);
+        navigate("/profile");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -82,11 +75,15 @@ const ProfileUpdate = () => {
             <input id="password" name="password" type="password" />
           </div>
           <button>Update</button>
-          {error && <span>error</span>}
+         
         </form>
       </div>
       <div className="sideContainer">
-      <img src={avatar[0] || currentUser.avatar || "/noavatar.jpg"} alt="" className="avatar" />
+        <img
+          src={avatar[0] || currentUser.avatar || "/noavatar.jpg"}
+          alt=""
+          className="avatar"
+        />
         <UploadWidget
           uwConfig={{
             cloudName: "imran-developer",
@@ -98,7 +95,6 @@ const ProfileUpdate = () => {
           setState={setAvatar}
           setPublicId={setPublicId}
         />
-       
       </div>
     </div>
   );

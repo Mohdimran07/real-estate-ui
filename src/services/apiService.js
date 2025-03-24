@@ -1,81 +1,39 @@
 import { BASE_URL } from "../constants";
 
-const fetchSinglePost = async (id, { signal } = {}) => {
-  const response = await fetch(`${BASE_URL}/posts/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    signal, // Pass the signal to the fetch request
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch data");
-  }
-  const data = await response.json();
-  return data;
-};
-
-const savePostById = async (id) => {
-  const response = await fetch(`${BASE_URL}/user/save`, {
+// Auth
+const logoutHandler = async () => {
+  const response = await fetch(`${BASE_URL}/auth/logout`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ postId: id }),
   });
-  if (!response.ok) {
-    throw new Error("Failed to save data");
-  }
   return response.json();
 };
 
-const fetchAllChats = async () => {
-  const response = await fetch(`${BASE_URL}/chats`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch data");
-  }
-  const data = await response.json();
-  return data;
-};
-
-const sendMessage = async (id, message) => {
-  const response = await fetch(`${BASE_URL}/messages/${id}`, {
+const loginUser = async (userInfo) => {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     credentials: "include",
-    body: JSON.stringify({ text: message }),
+    body: JSON.stringify(userInfo),
   });
-  if (!response.ok) {
-    throw new Error("Failed to send message");
-  }
-  const data = await response.json();
-  return data;
+  return response.json();
 };
 
-const createChat = async (Id) => {
-  const response = await fetch(`${BASE_URL}/chats`, {
+const registerUser = async (userInfo) => {
+  const response = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     credentials: "include",
-    body: JSON.stringify({ receiverId: Id }),
+    body: JSON.stringify(userInfo),
   });
-  if (!response.ok) {
-    throw new Error("Failed to create chat");
-  }
-  const data = await response.json();
-  return data;
+  return response.json();
 };
 
-export {
-  fetchSinglePost,
-  savePostById,
-  fetchAllChats,
-  sendMessage,
-  createChat,
-};
+export { logoutHandler, loginUser, registerUser };

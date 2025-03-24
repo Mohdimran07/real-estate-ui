@@ -1,10 +1,14 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import "./chat.scss";
 import { AuthContext } from "../../context/AuthContext";
-import { BASE_URL } from "../../constants";
 import { format } from "timeago.js";
 import { SocketContext } from "../../context/SocketContext";
 import { useNotificationStore } from "../../lib/notificationStore";
+import {
+  markChatAsRead,
+  openChat,
+  sendMessage,
+} from "../../services/chatServices";
 
 const Chat = ({ chats }) => {
   const { currentUser } = useContext(AuthContext);
@@ -18,15 +22,10 @@ const Chat = ({ chats }) => {
 
   const decrease = useNotificationStore((state) => state.decreaseNotifications);
 
-  const openChat = async (id, receiver) => {
+  const openChatHandler = async (id, receiver) => {
     setChat(true);
     try {
-      const res = await fetch(`${BASE_URL}/chats/${id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      const response = await res.json();
+      const response = await openChat(id);
       if (!response.data.seenBy.includes(currentUser.id)) {
         decrease(); // Decrease notification count
       }
@@ -45,13 +44,7 @@ const Chat = ({ chats }) => {
     if (!message) return;
 
     try {
-      const resp = await fetch(`${BASE_URL}/messages/${chat.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ text }),
-      });
-      const res = await resp.json();
+      const res = await sendMessage(chat.id, text);
       setChat((prev) => ({ ...prev, messages: [...prev.messages, res.data] }));
       e.target.reset();
       setMessage(""); // Clear input after sending
@@ -70,30 +63,14 @@ const Chat = ({ chats }) => {
   };
 
   useEffect(() => {
-    const read = async () => {
-      try {
-        await fetch(`${BASE_URL}/chats/read/${chat.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ text: message }),
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
     if (socket && chat) {
-      console.log("chat", chat);
       socket.on("getMessage", (data) => {
-        console.log("getMessage:", data);
         if (chat.id === data.chatId) {
           setChat((prev) => ({ ...prev, messages: [...prev.messages, data] }));
-          read();
+          markChatAsRead(chat.id);
         }
       });
       socket.on("typing", ({ isTyping, senderId }) => {
-        console.log("typing", { isTyping, senderId });
-        console.log(onlineUsersClient);
         const userId = onlineUsersClient[senderId]; // Get userID from socketID
         console.log(userId, chat?.receiver?.id);
         if (userId === chat?.receiver?.id) {
@@ -114,7 +91,6 @@ const Chat = ({ chats }) => {
   useEffect(() => {
     if (socket) {
       socket.on("onlineUsers", (users) => {
-        console.log("onlineUsers", users);
         const userMap = {};
         users.forEach((user) => {
           userMap[user.socketId] = user.userId;
@@ -148,7 +124,7 @@ const Chat = ({ chats }) => {
           <div
             className="message"
             key={c.id}
-            onClick={() => openChat(c.id, c.user)}
+            onClick={() => openChatHandler(c.id, c.user)}
             style={{
               backgroundColor:
                 c?.seenBy.includes(currentUser.id) || chat?.id === c.id
@@ -193,11 +169,6 @@ const Chat = ({ chats }) => {
               </div>
             ))}
             <div ref={messageEndRef}></div>
-
-            {/* <div className="chatMessage me">
-              <p>Lorem ipsum dolor sit amet </p>
-              <span>1 hr</span>
-            </div> */}
           </div>
           <form onSubmit={handleSubmit} className="bottom">
             <textarea

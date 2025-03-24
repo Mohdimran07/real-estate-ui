@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { toast } from "react-toastify";
 import "./login.scss";
-import { BASE_URL } from "../../constants";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { showToast } from "../../components/toast/Toast";
+import { loginUser } from "../../services/apiService";
 
 const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const {updateUser} = useContext(AuthContext)
+  const { updateUser } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -20,24 +22,28 @@ const Login = () => {
     const email = formData.get("email");
     const password = formData.get("password");
 
+    if (!email || !password) {
+      showToast("Please fill all the fields", "warn");
+      return;
+    }
+
     try {
-      const resp = await fetch(`${BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Ensure cookies are included in the request
-        body: JSON.stringify({ email, password }),
-      });
-      const responsedata = await resp.json();
-      console.log("login response: ", responsedata);
+      const responsedata = await loginUser({ email, password });
+
+      if (responsedata.error) {
+        console.log(responsedata.error);
+        showToast(responsedata.message, "error");
+        setIsLoading(false);
+        return;
+      }
       const { data } = responsedata;
-      console.log(data)
       setIsLoading(false);
-        updateUser(data);
+      showToast("Login Successful", "success");
+      updateUser(data);
       navigate("/");
     } catch (error) {
       setError("Something went wrong");
+      toast.error("Login Failed");
       setIsLoading(false);
     }
   };

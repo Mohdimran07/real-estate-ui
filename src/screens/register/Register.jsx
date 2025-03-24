@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import "./register.scss";
-import { BASE_URL } from "../../constants";
+import { registerUser } from "../../services/apiService";
+import { showToast } from "../../components/toast/Toast";
 
 const Register = () => {
   const [error, setError] = useState("");
@@ -19,27 +20,23 @@ const Register = () => {
     const password = formData.get("password");
 
     console.log(name, email, password);
+    if (!name || !email || !password) {
+      showToast("Please fill all the fields", "warn");
+      return;
+    }
 
     try {
-      const resp = await fetch(`${BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Ensure cookies are included in the request
-        body: JSON.stringify({ name, email, password }),
-      });
-      const data = await resp.json();
-      console.log(data);
-      if (data.error) {
-        setIsLoading(false);
-        setError(data.message);
-      } else {
+      const response = await registerUser({ name, email, password });
+      if (!response.error) {
+        showToast(response.message, "success");
         navigate("/login");
+      } else {
+        showToast(response.message, "error");
       }
-    } catch (err) {
-      console.log(err);
-      // setError(error);
+    } catch (error) {
+      console.log(error);
+      showToast("Failed to register", "error");
+    } finally {
       setIsLoading(false);
     }
   };

@@ -3,17 +3,16 @@ import Modal from "react-modal";
 import "./singlepage.scss";
 import Slider from "../../components/slider/Slider";
 import { useNavigate, useParams } from "react-router";
-import { BASE_URL } from "../../constants";
 import { AuthContext } from "../../context/AuthContext";
 import PostDetails from "../../components/PostDetails/PostDetails";
 import FeatureList from "../../components/FeatureList/FeatureList";
+import { fetchSinglePost, savePostById } from "../../services/postServices";
 import {
   createChat,
   fetchAllChats,
-  fetchSinglePost,
-  savePostById,
   sendMessage,
-} from "../../services/apiService";
+} from "../../services/chatServices";
+import { showToast } from "../../components/toast/Toast";
 
 Modal.setAppElement("#root");
 
@@ -51,7 +50,6 @@ const SinglePage = () => {
         const result = await fetchSinglePost(id, {
           signal: abortController.signal,
         });
-        console.log(result.data);
         setData(result.data);
         setSaved(result.isSaved);
         setLoading(false);
@@ -81,7 +79,10 @@ const SinglePage = () => {
     }
 
     try {
-      await savePostById(id);
+      const response = await savePostById(id);
+      if (!response.error) {
+        showToast(response.message, "success");
+      }
     } catch (error) {
       setSaved(currentSavedState);
       console.log(error);
@@ -103,7 +104,6 @@ const SinglePage = () => {
   const handleSendMessage = async () => {
     try {
       const chatsData = await fetchAllChats();
-      console.log("chatsData", chatsData);
 
       // Find matching chat ID
       const matchingId = findObjectIdWithUserIds(
@@ -115,24 +115,29 @@ const SinglePage = () => {
       if (matchingId) {
         // Send the message to the existing chat
         const messageData = await sendMessage(matchingId, message);
-        console.log("Message sent to existing chat:", messageData);
+        if (!messageData.error) {
+          showToast(messageData.message, "success");
+        }
       } else {
         // Create a new chat and send the message
         const createChatData = await createChat(data?.userId);
-        console.log("data:", createChatData, currentUser.id, data.userId);
+
         const newMatchingId = findObjectIdWithUserIds(
           createChatData.data,
           currentUser.id,
           data.userId
         );
-        console.log("newMatchingId", newMatchingId);
+
         if (newMatchingId) {
           const messageData = await sendMessage(newMatchingId, message);
-          console.log("Message sent to new chat:", messageData);
+          if (!messageData.error) {
+            showToast(messageData.message, "success");
+          }
         }
       }
     } catch (error) {
       console.error("Error sending message:", error); // Handle error properly
+      showToast("Message Failed!", "error");
     } finally {
       closeModal(); // Close modal after sending
     }

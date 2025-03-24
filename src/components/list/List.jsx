@@ -4,7 +4,6 @@ import { listData } from "../../lib/dummydata";
 import Card from "../card/Card";
 
 const List = ({ postData }) => {
-  console.log(postData);
   return (
     <div className="list">
       {postData?.map((item) => (
